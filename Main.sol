@@ -2,36 +2,37 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-contract Main
-{
-    address public owner;
-
-    event transaction(address _address, uint _amount);
-
-    struct User
-    {
+contract second {
+    struct User {
         address userAddress;
         uint256 balance;
     }
-
-    User[] private users;
-    User private user;
-
-    function sendBalance(address payable _address) public payable
-    {
-        require(msg.value <= user.balance, unicode"Недостаточно баланса для операции.");
-        _address.transfer(msg.value);
-        emit transaction(_address, msg.value);
-    }
-
-    function withdrawBalance() public payable 
-    {
-        require(msg.value > 0, unicode"Значение больше нуля!");
+    
+    mapping(address => User) private users;
+    
+    event transaction(address indexed user, uint256 amount);
+    
+    function sendBalance() external payable {
+        require(msg.value > 0, unicode"Значение должно быть больше нуля.");
+        
+        User storage user = users[msg.sender];
+        user.userAddress = msg.sender;
         user.balance += msg.value;
-        emit transaction(user.userAddress, user.balance);
+        
+        emit transaction(msg.sender, msg.value);
     }
 
-    function getBalance() public view returns(uint){
-        return user.balance;
+    function withdrawBalance(uint256 index) external payable {
+        require(index > 0, unicode"Значение больше нуля!");
+
+        users[msg.sender].balance -= index;
+        payable(msg.sender).transfer(index);
+        
+        emit transaction(msg.sender, index);
     }
+        
+    function getBalance(address user) external view returns (uint) {
+        return users[user].balance;
+    }
+    
 }
